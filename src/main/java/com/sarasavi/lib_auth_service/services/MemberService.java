@@ -26,7 +26,7 @@ public class MemberService {
     // member login via email and password
     public boolean loginMember(String email, String password) {
         // send email to the http://localhost:8080/api/v1/members/by-email?email=john.doe@example.com
-        // and ge the username and the password according to the email
+        // and get the username and the password according to the email
 
         try {
             MemberDTO member = restTemplate.getForObject("http://localhost:8080/api/v1/members/by-email?email=" + email, MemberDTO.class);
