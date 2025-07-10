@@ -4,6 +4,7 @@ import com.sarasavi.lib_auth_service.dto.MemberDTO;
 import com.sarasavi.lib_auth_service.repository.MemberRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +20,9 @@ public class MemberService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // member login via email and password
     public boolean loginMember(String email, String password) {
         // send email to the http://localhost:8080/api/v1/members/by-email?email=john.doe@example.com
@@ -29,16 +33,19 @@ public class MemberService {
             if (member == null) {
                 System.out.println("Member not found with email: " + email);
                 return false; // member not found
-            } else {
-                // check if the password matches
-                if (member.getPassword().equals(password)) {
-                    System.out.println("Login successful for member: " + email);
-                    return true; // login successful
-                } else {
-                    System.out.println("Invalid password for member: " + email);
-                    return false; // invalid password
-                }
             }
+            String storedPassword = member.getPassword();
+
+            if (passwordEncoder.matches(password, storedPassword)) {
+                // Password matches, login successful
+                System.out.println("Login successful for member: " + email);
+                return true;
+            } else {
+                // Password does not match
+                System.out.println("Invalid password for member: " + email);
+                return false;
+            }
+
         } catch (Exception e) {
             // handle exception
             System.out.println("Error occurred while logging in: " + e.getMessage());
