@@ -16,6 +16,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/members/**").permitAll() // Public access
+                        .requestMatchers("/api/v1/admins/**").permitAll()
+                        .requestMatchers("/api/v1/librarians/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable()) // Updated syntax: disables CSRF
