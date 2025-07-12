@@ -7,9 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class LibrarianService {
+
+    private static final Logger logger = LoggerFactory.getLogger(LibrarianService.class);
+
     @Autowired
     private LibrarianRepository librarianRepository;
 
@@ -25,23 +31,30 @@ public class LibrarianService {
     // librarian login via email and password
     public boolean loginLibrarian(String email, String password) {
         try {
-            LibrarianDTO librarian = restTemplate.getForObject("http://localhost:8080/librarians/email/" + email, LibrarianDTO.class);
-            if (librarian == null) {
-                System.out.println("Librarian not found with email: " + email);
+            String url = UriComponentsBuilder
+                    .fromHttpUrl("http://localhost:8080/api/v1/librarians/by-email")
+                    .queryParam("email", email)
+                    .toUriString();
+
+            LibrarianDTO librarian = restTemplate.getForObject(url, LibrarianDTO.class);
+
+            if (librarian == null || librarian.getPassword() == null) {
+                logger.warn("Librarian not found or password is null for email: {}", email);
                 return false;
             }
 
             String storedPassword = librarian.getPassword();
+
             if (passwordEncoder.matches(password, storedPassword)) {
-                System.out.println("Librarian logged in successfully: " + email);
+                logger.info("Login successful for librarian: {}", email);
                 return true;
             } else {
-                System.out.println("Invalid password for librarian: " + email);
+                logger.warn("Invalid password for librarian: {}", email);
                 return false;
             }
-        }
-        catch (Exception e) {
-            System.out.println("Error occurred while logging in: " + e.getMessage());
+
+        } catch (Exception e) {
+            logger.error("Error occurred while logging in librarian with email {}: {}", email, e.getMessage());
             return false;
         }
     }
